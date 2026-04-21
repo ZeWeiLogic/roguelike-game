@@ -37,6 +37,36 @@ roguelike-game/
 
 ---
 
+## 开发流程（完整自动化）
+
+### 标准开发流程
+
+```bash
+# 1. 本地开发测试
+npm run dev
+
+# 2. 修改代码后，本地构建测试
+npm run build
+npm run preview   # 预览生产版本
+
+# 3. 确认没问题后，提交代码
+git add .
+git commit -m "描述本次修改"
+git push
+
+# 4. GitHub push 后，Cloudflare Pages 会自动检测并部署
+# 无需手动部署，https://roguelike-game.pages.dev/ 会自动更新
+```
+
+### 手动部署（不推荐，仅用于紧急情况）
+
+```bash
+# 构建 + 手动部署到 Cloudflare Pages
+npm run build && npx wrangler pages deploy dist --project-name=roguelike-game --commit-dirty=true
+```
+
+---
+
 ## 本地开发
 
 ### 1. 安装依赖
@@ -70,50 +100,34 @@ npm run preview
 
 ---
 
-## 代码提交与部署流程
+## 部署说明
 
-### 方式一：手动部署（当前使用）
+### Cloudflare Pages 自动部署
 
-#### 步骤 1：本地构建
+项目已配置 GitHub + Cloudflare Pages 联动：
 
-```bash
-npm run build
+1. 代码 push 到 GitHub `master` 分支
+2. Cloudflare Pages **自动**检测到 push
+3. Cloudflare Pages **自动**运行 `npm run build`
+4. 构建完成后**自动**部署到 `https://roguelike-game.pages.dev/`
+
+### 部署流程图
+
 ```
-
-#### 步骤 2：部署到 Cloudflare Pages
-
-```bash
-npx wrangler pages deploy dist --project-name=roguelike-game --commit-dirty=true
+本地修改代码
+    ↓
+npm run build (本地测试)
+    ↓
+npm run preview (预览确认)
+    ↓
+git add . → git commit → git push
+    ↓
+GitHub 收到 push
+    ↓
+Cloudflare Pages 自动构建部署
+    ↓
+https://roguelike-game.pages.dev/ 更新
 ```
-
-#### 步骤 3：提交代码到 GitHub
-
-```bash
-git add .
-git commit -m "描述本次修改"
-git push
-```
-
-> **注意**：`--commit-dirty=true` 表示 wrangler 会忽略未提交的更改直接部署。
-
----
-
-### 方式二：GitHub 自动部署（推荐）
-
-当代码 push 到 GitHub 后，Cloudflare Pages 会**自动**检测并部署。
-
-**设置步骤：**
-
-1. 打开 https://pages.cloudflare.com
-2. 点击 **Create a project** → **Import GitHub project**
-3. 授权 Cloudflare 访问 GitHub
-4. 选择 `roguelike-game` 仓库
-5. 设置：
-   - **Build command**: `npm run build`
-   - **Build output directory**: `dist`
-6. 点击 **Save and Deploy**
-
-之后每次 `git push` 后，Cloudflare 会自动构建并部署。
 
 ---
 
@@ -145,7 +159,7 @@ npx wrangler whoami
 npx wrangler pages project list
 ```
 
-### 部署命令
+### 部署命令（手动部署用）
 
 ```bash
 npx wrangler pages deploy <目录> --project-name=<项目名>
@@ -163,10 +177,10 @@ npx wrangler pages deployment list --project-name=roguelike-game
 
 | 操作 | PC | 手机 |
 |------|-----|------|
-| 移动 | WASD / 方向键 | 触摸屏幕下半部分虚拟摇杆 |
+| 移动 | WASD / 方向键 | 触摸屏幕左侧虚拟摇杆 |
 | 射击 | 自动射击 | 自动射击 |
-| 进入商店 | 屏幕出现"商店"按钮时点击，或按 E | 点击"商店"按钮 |
-| 关闭商店 | ESC | 点击空白处 |
+| 进入商店 | 按 E / 点击商店按钮 | 点击商店按钮 |
+| 关闭商店 | ESC / 点击关闭按钮 | 点击关闭按钮 |
 | 开始游戏 | 点击/按空格/回车 | 点击屏幕 |
 | 进入下一房间 | W/上 | 门开启后自动进入 |
 
@@ -175,6 +189,7 @@ npx wrangler pages deployment list --project-name=roguelike-game
 ## 游戏机制
 
 ### 房间系统
+- 横板模式，左侧虚拟摇杆
 - 每 5 间出现商店
 - 每 20 间出现 BOSS
 - 击败所有敌人后门打开
@@ -207,6 +222,9 @@ npx wrangler pages deployment list --project-name=roguelike-game
 ### Q: 手机上无法开始游戏？
 确保允许页面通知/声音权限，或者触摸屏幕任意位置开始。
 
+### Q: Cloudflare Pages 没自动部署？
+检查 GitHub 仓库是否已连接 Cloudflare Pages，在 Cloudflare Dashboard 查看部署状态。
+
 ---
 
 ## 相关链接
@@ -214,7 +232,6 @@ npx wrangler pages deployment list --project-name=roguelike-game
 - **游戏地址**: https://roguelike-game.pages.dev/
 - **GitHub 仓库**: https://github.com/ZeWeiLogic/roguelike-game
 - **Cloudflare Pages**: https://pages.cloudflare.com
-- **Zeabur**（备用部署）: https://zeabur.com
 
 ---
 
@@ -224,3 +241,4 @@ npx wrangler pages deployment list --project-name=roguelike-game
 2. **描述清晰**：commit 信息说明改了什么
 3. **分支策略**：直接 push 到 master（当前单人开发）
 4. **敏感信息**：不要在代码中硬编码 API token 等
+5. **完整流程**：修改 → 本地构建测试 → 预览确认 → commit → push → 自动部署
