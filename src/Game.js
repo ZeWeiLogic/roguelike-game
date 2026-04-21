@@ -375,7 +375,7 @@ export class Game {
         this.ctx.strokeRect(px, py, tileSize, tileSize)
 
         // 随机裂纹和杂色
-        const seed = x * 1000 + y
+        let seed = x * 1000 + y
         const rng = () => {
           seed = (seed * 1103515245 + 12345) & 0x7fffffff
           return seed / 0x7fffffff
