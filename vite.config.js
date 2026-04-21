@@ -7,7 +7,7 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['icon-192.png', 'icon-512.png'],
       manifest: {
-        id: '/',
+        id: 'roguelike-game-v1',
         name: '肉鸽幸存者',
         short_name: '肉鸽',
         description: 'PWA 动作肉鸽游戏',
