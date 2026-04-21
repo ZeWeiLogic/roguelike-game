@@ -4,8 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="theme-color" content="#1a1a2e">
+  <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="description" content="PWA 动作肉鸽游戏">
   <title>肉鸽幸存者</title>
   <style>
     * {
@@ -19,6 +21,9 @@
       overflow: hidden;
       background: #1a1a2e;
       touch-action: none;
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      user-select: none;
     }
     #game-canvas {
       display: block;
@@ -27,27 +32,29 @@
     }
     #install-prompt {
       position: fixed;
-      bottom: 20px;
+      bottom: 100px;
       left: 50%;
       transform: translateX(-50%);
-      background: #e94560;
+      background: linear-gradient(135deg, #e94560, #ff6b6b);
       color: white;
-      padding: 12px 24px;
-      border-radius: 8px;
-      font-size: 14px;
+      padding: 16px 32px;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: bold;
       display: none;
       z-index: 1000;
       cursor: pointer;
-      box-shadow: 0 4px 12px rgba(233, 69, 96, 0.4);
+      box-shadow: 0 4px 20px rgba(233, 69, 96, 0.5);
+      text-align: center;
     }
-    #install-prompt:hover {
-      background: #d63850;
+    #install-prompt:active {
+      transform: translateX(-50%) scale(0.95);
     }
   </style>
 </head>
 <body>
   <canvas id="game-canvas"></canvas>
-  <div id="install-prompt">添加到主屏幕</div>
+  <div id="install-prompt">📱 安装到桌面</div>
   <script type="module" src="/src/main.js"></script>
 </body>
 </html>
