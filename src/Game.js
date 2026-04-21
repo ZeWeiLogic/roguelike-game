@@ -76,9 +76,23 @@ export class Game {
           this.state = GAME_STATE.PLAYING
         }
       }
+      // E键进入商店
+      if (e.code === 'KeyE' && this.state === GAME_STATE.PLAYING) {
+        if (this.stageManager.roomType === 'shop') {
+          this.state = GAME_STATE.SHOP
+        }
+      }
+      // 进入下一房间
+      if (e.code === 'KeyW' || e.code === 'ArrowUp') {
+        if (this.state === GAME_STATE.PLAYING && this.stageManager.doorOpen) {
+          this.stageManager.nextRoom()
+          this.spawnEnemies()
+        }
+      }
     })
 
     this.canvas.addEventListener('click', (e) => {
+      e.preventDefault()
       const rect = this.canvas.getBoundingClientRect()
       const x = e.clientX - rect.left
       const y = e.clientY - rect.top
@@ -89,6 +103,27 @@ export class Game {
         this.startGame()
       }
     })
+
+    // 移动端触摸开始
+    this.canvas.addEventListener('touchstart', (e) => {
+      e.preventDefault()
+      const rect = this.canvas.getBoundingClientRect()
+      const touch = e.touches[0]
+      const x = touch.clientX - rect.left
+      const y = touch.clientY - rect.top
+
+      if (this.state === GAME_STATE.SHOP) {
+        this.shopSystem.handleClick(x, y, this.player)
+      } else if (this.state === GAME_STATE.MENU || this.state === GAME_STATE.GAME_OVER) {
+        this.startGame()
+      } else if (this.state === GAME_STATE.PLAYING && this.shopButton) {
+        // 检查是否点击商店按钮
+        const btn = this.shopButton
+        if (x >= btn.x && x <= btn.x + btn.w && y >= btn.y && y <= btn.y + btn.h) {
+          this.state = GAME_STATE.SHOP
+        }
+      }
+    }, { passive: false })
   }
 
   startGame() {
@@ -155,34 +190,35 @@ export class Game {
     // 更新玩家
     this.player.update(this.input, deltaTime, this.canvas.width, this.canvas.height)
 
-    // 玩家攻击
+    // 玩家攻击（自动射击）
     const now = performance.now()
-    if (this.input.isKeyPressed('Space') && this.player.canAttack(now)) {
-      if (this.enemies.length > 0) {
-        // 找到最近的敌人
-        let nearestEnemy = null
-        let nearestDist = Infinity
+    if (this.player.canAttack(now) && this.enemies.length > 0) {
+      // 找到最近的敌人
+      let nearestEnemy = null
+      let nearestDist = Infinity
 
-        this.enemies.forEach(enemy => {
-          const dx = enemy.x - this.player.x
-          const dy = enemy.y - this.player.y
-          const dist = Math.sqrt(dx * dx + dy * dy)
-          if (dist < nearestDist) {
-            nearestDist = dist
-            nearestEnemy = enemy
-          }
-        })
-
-        if (nearestEnemy) {
-          this.bullets.push(new Bullet(
-            this.player.x,
-            this.player.y,
-            nearestEnemy.x,
-            nearestEnemy.y,
-            this.player.attack
-          ))
-          this.player.attackNow(now)
+      this.enemies.forEach(enemy => {
+        const dx = enemy.x - this.player.x
+        const dy = enemy.y - this.player.y
+        const dist = Math.sqrt(dx * dx + dy * dy)
+        if (dist < nearestDist) {
+          nearestDist = dist
+          nearestEnemy = enemy
         }
+      })
+
+      if (nearestEnemy) {
+        this.bullets.push(new Bullet(
+          this.player.x,
+          this.player.y,
+          nearestEnemy.x,
+          nearestEnemy.y,
+          this.player.attack
+        ))
+        this.player.attackNow(now)
+
+        // 射击震动
+        this.triggerScreenShake(2, 50)
       }
     }
 
@@ -331,6 +367,28 @@ export class Game {
 
     // 绘制 UI
     this.drawUI()
+
+    // 商店按钮（手机/触屏友好）
+    if (this.state === GAME_STATE.PLAYING && this.stageManager.roomType === 'shop') {
+      const btnX = this.canvas.width - 100
+      const btnY = this.canvas.height - 80
+      const btnW = 80
+      const btnH = 50
+
+      this.ctx.fillStyle = 'rgba(255, 215, 0, 0.8)'
+      this.roundRect(this.ctx, btnX, btnY, btnW, btnH, 10)
+      this.ctx.fill()
+
+      this.ctx.fillStyle = '#000'
+      this.ctx.font = 'bold 14px monospace'
+      this.ctx.textAlign = 'center'
+      this.ctx.fillText('商店', btnX + btnW / 2, btnY + btnH / 2 + 5)
+
+      // 存储按钮区域供点击检测
+      this.shopButton = { x: btnX, y: btnY, w: btnW, h: btnH }
+    } else {
+      this.shopButton = null
+    }
 
     // 商店界面
     if (this.state === GAME_STATE.SHOP) {

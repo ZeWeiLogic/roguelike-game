@@ -31,6 +31,7 @@ export class StageManager {
     } else if (this.room % 5 === 0) {
       this.roomType = 'shop'
       this.enemiesRemaining = 0
+      this.doorOpen = true // 商店房间门默认开启
     } else {
       this.roomType = 'normal'
       this.enemiesRemaining = 3 + Math.floor(this.room / 3)

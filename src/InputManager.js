@@ -61,17 +61,21 @@ export class InputManager {
     if (this.directions.left) dx -= 1
     if (this.directions.right) dx += 1
 
-    // 触摸输入 - 虚拟摇杆
+    // 触摸输入 - 虚拟摇杆（只在屏幕下半部分激活）
     if (this.touch.active) {
       const centerX = this.canvas.width / 2
       const centerY = this.canvas.height * 0.75
-      const touchDx = this.touch.x - centerX
-      const touchDy = this.touch.y - centerY
-      const distance = Math.sqrt(touchDx * touchDx + touchDy * touchDy)
 
-      if (distance > 30) {
-        dx = touchDx / distance
-        dy = touchDy / distance
+      // 只有触摸屏幕下半部分才作为移动摇杆
+      if (this.touch.y > this.canvas.height * 0.4) {
+        const touchDx = this.touch.x - centerX
+        const touchDy = this.touch.y - centerY
+        const distance = Math.sqrt(touchDx * touchDx + touchDy * touchDy)
+
+        if (distance > 30) {
+          dx = touchDx / distance
+          dy = touchDy / distance
+        }
       }
     }
 

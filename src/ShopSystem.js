@@ -146,10 +146,12 @@ export class ShopSystem {
     const available = this.getAvailableUpgrades()
     const startY = 120
     const itemHeight = 60
+    const itemX = 150 // canvasWidth/2 - 150
+    const itemWidth = 300
 
     for (let i = 0; i < available.length; i++) {
       const itemY = startY + i * itemHeight
-      if (x >= 110 && x <= 460 && y >= itemY && y <= itemY + 50) {
+      if (x >= itemX && x <= itemX + itemWidth && y >= itemY && y <= itemY + 50) {
         const upgradeIndex = this.upgrades.indexOf(available[i])
         return this.purchase(upgradeIndex, player)
       }
