@@ -61,22 +61,36 @@ export class InputManager {
     if (this.directions.left) dx -= 1
     if (this.directions.right) dx += 1
 
-    // 触摸输入 - 虚拟摇杆（只在屏幕下半部分激活）
+    // 触摸输入 - 虚拟摇杆（只在屏幕左半边激活，方便横板游戏）
     if (this.touch.active) {
-      const centerX = this.canvas.width / 2
-      const centerY = this.canvas.height * 0.75
+      const halfWidth = this.canvas.width / 2
 
-      // 只有触摸屏幕下半部分才作为移动摇杆
-      if (this.touch.y > this.canvas.height * 0.4) {
-        const touchDx = this.touch.x - centerX
-        const touchDy = this.touch.y - centerY
+      // 只有触摸屏幕左半部分才作为移动摇杆
+      if (this.touch.x < halfWidth) {
+        // 摇杆基点在左侧中央
+        const joystickBaseX = halfWidth * 0.3
+        const joystickBaseY = this.canvas.height * 0.75
+
+        const touchDx = this.touch.x - joystickBaseX
+        const touchDy = this.touch.y - joystickBaseY
         const distance = Math.sqrt(touchDx * touchDx + touchDy * touchDy)
 
-        if (distance > 30) {
+        if (distance > 20) {
+          const clampedDistance = Math.min(distance, 60)
           dx = touchDx / distance
           dy = touchDy / distance
+
+          // 记录摇杆位置用于绘制
+          this.joystickX = joystickBaseX + (touchDx / distance) * clampedDistance
+          this.joystickY = joystickBaseY + (touchDy / distance) * clampedDistance
+        } else {
+          this.joystickX = joystickBaseX
+          this.joystickY = joystickBaseY
         }
       }
+    } else {
+      this.joystickX = undefined
+      this.joystickY = undefined
     }
 
     // 归一化
@@ -85,6 +99,16 @@ export class InputManager {
       return { x: dx / length, y: dy / length }
     }
     return { x: 0, y: 0 }
+  }
+
+  // 获取摇杆位置（用于绘制）
+  getJoystickPosition() {
+    return {
+      baseX: this.canvas.width * 0.3,
+      baseY: this.canvas.height * 0.75,
+      stickX: this.joystickX,
+      stickY: this.joystickY
+    }
   }
 
   isKeyPressed(code) {

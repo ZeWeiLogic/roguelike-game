@@ -98,7 +98,10 @@ export class Game {
       const y = e.clientY - rect.top
 
       if (this.state === GAME_STATE.SHOP) {
-        this.shopSystem.handleClick(x, y, this.player)
+        const result = this.shopSystem.handleClick(x, y, this.player)
+        if (result === 'close') {
+          this.state = GAME_STATE.PLAYING
+        }
       } else if (this.state === GAME_STATE.MENU || this.state === GAME_STATE.GAME_OVER) {
         this.startGame()
       }
@@ -113,7 +116,10 @@ export class Game {
       const y = touch.clientY - rect.top
 
       if (this.state === GAME_STATE.SHOP) {
-        this.shopSystem.handleClick(x, y, this.player)
+        const result = this.shopSystem.handleClick(x, y, this.player)
+        if (result === 'close') {
+          this.state = GAME_STATE.PLAYING
+        }
       } else if (this.state === GAME_STATE.MENU || this.state === GAME_STATE.GAME_OVER) {
         this.startGame()
       } else if (this.state === GAME_STATE.PLAYING && this.shopButton) {
@@ -370,19 +376,19 @@ export class Game {
 
     // 商店按钮（手机/触屏友好）
     if (this.state === GAME_STATE.PLAYING && this.stageManager.roomType === 'shop') {
-      const btnX = this.canvas.width - 100
-      const btnY = this.canvas.height - 80
-      const btnW = 80
-      const btnH = 50
+      const btnX = this.canvas.width - 120
+      const btnY = this.canvas.height - 100
+      const btnW = 100
+      const btnH = 60
 
-      this.ctx.fillStyle = 'rgba(255, 215, 0, 0.8)'
-      this.roundRect(this.ctx, btnX, btnY, btnW, btnH, 10)
+      this.ctx.fillStyle = 'rgba(255, 215, 0, 0.9)'
+      this.roundRect(this.ctx, btnX, btnY, btnW, btnH, 12)
       this.ctx.fill()
 
       this.ctx.fillStyle = '#000'
-      this.ctx.font = 'bold 14px monospace'
+      this.ctx.font = 'bold 18px monospace'
       this.ctx.textAlign = 'center'
-      this.ctx.fillText('商店', btnX + btnW / 2, btnY + btnH / 2 + 5)
+      this.ctx.fillText('商店', btnX + btnW / 2, btnY + btnH / 2 + 6)
 
       // 存储按钮区域供点击检测
       this.shopButton = { x: btnX, y: btnY, w: btnW, h: btnH }
@@ -395,19 +401,20 @@ export class Game {
       this.shopSystem.draw(this.ctx, this.canvas.width, this.canvas.height, this.player)
     }
 
-    // 虚拟摇杆（触摸时显示）
-    if (this.input.touch.active) {
-      const centerX = this.canvas.width / 2
-      const centerY = this.canvas.height * 0.75
-      this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)'
-      this.ctx.lineWidth = 2
+    // 虚拟摇杆（触摸时显示）- 左侧
+    if (this.input.touch.active && this.input.touch.x < this.canvas.width / 2) {
+      const pos = this.input.getJoystickPosition()
+      // 绘制摇杆基座
+      this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)'
+      this.ctx.lineWidth = 3
       this.ctx.beginPath()
-      this.ctx.arc(centerX, centerY, 50, 0, Math.PI * 2)
+      this.ctx.arc(pos.baseX, pos.baseY, 50, 0, Math.PI * 2)
       this.ctx.stroke()
 
-      this.ctx.fillStyle = 'rgba(255, 255, 255, 0.2)'
+      // 绘制摇杆按钮
+      this.ctx.fillStyle = 'rgba(255, 255, 255, 0.5)'
       this.ctx.beginPath()
-      this.ctx.arc(this.input.touch.x, this.input.touch.y, 30, 0, Math.PI * 2)
+      this.ctx.arc(pos.stickX || pos.baseX, pos.stickY || pos.baseY, 25, 0, Math.PI * 2)
       this.ctx.fill()
     }
   }
