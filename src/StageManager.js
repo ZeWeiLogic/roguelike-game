@@ -14,7 +14,7 @@ export class StageManager {
     this.width = width
     this.height = height
     this.room = 1
-    this.enemiesRemaining = 0
+    this.enemiesRemaining = 3 // 第一房有3个敌人
     this.roomType = 'normal'
     this.doorOpen = false
     this.enemiesKilled = 0
