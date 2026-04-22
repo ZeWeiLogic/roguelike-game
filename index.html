@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="theme-color" content="#1a1a2e">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-status-bar-style" content="black-translucent">
@@ -11,7 +11,6 @@
   <meta name="apple-mobile-web-app-title" content="肉鸽幸存者">
   <meta name="description" content="PWA 动作肉鸽游戏">
   <meta name="format-detection" content="telephone=no">
-  <meta name="screen-orientation" content="landscape">
   <title>肉鸽幸存者</title>
   <style>
     * {
@@ -28,11 +27,17 @@
       -webkit-touch-callout: none;
       -webkit-user-select: none;
       user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    body {
+      position: fixed;
+      inset: 0;
     }
     #game-canvas {
       display: block;
-      width: 100vw;
-      height: 100vh;
+      width: 100%;
+      height: 100%;
+      touch-action: none;
     }
     #install-prompt {
       position: fixed;
@@ -52,17 +57,6 @@
     }
     #install-prompt:active {
       transform: translateX(-50%) scale(0.95);
-    }
-    @media (orientation: portrait) {
-      body {
-        transform: rotate(90deg);
-        transform-origin: left top;
-        width: 100vh;
-        height: 100vw;
-        position: absolute;
-        top: 100%;
-        left: 0;
-      }
     }
   </style>
 </head>

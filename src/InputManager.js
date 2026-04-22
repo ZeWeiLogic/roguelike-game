@@ -3,7 +3,6 @@ export class InputManager {
   constructor(canvas) {
     this.canvas = canvas
     this.keys = {}
-    this.touch = { x: 0, y: 0, active: false }
     this.directions = { up: false, down: false, left: false, right: false }
 
     // 动态摇杆状态
@@ -15,10 +14,6 @@ export class InputManager {
       stickY: 0,
       fingerId: null
     }
-
-    // 触摸开始位置（用于检测是否是移动操作）
-    this.touchStartX = 0
-    this.touchStartY = 0
 
     this.setupKeyboard()
     this.setupTouch()
@@ -37,96 +32,73 @@ export class InputManager {
   }
 
   setupTouch() {
-    // 使用 pointer events 来更好地处理移动端
-    this.canvas.addEventListener('pointerdown', (e) => {
+    // 统一使用 touch 事件，避免 pointer events 冲突
+    this.canvas.addEventListener('touchstart', (e) => {
       e.preventDefault()
-      this.handlePointerStart(e)
-    }, { passive: false })
 
-    this.canvas.addEventListener('pointermove', (e) => {
-      e.preventDefault()
-      this.handlePointerMove(e)
-    }, { passive: false })
-
-    this.canvas.addEventListener('pointerup', (e) => {
-      e.preventDefault()
-      this.handlePointerEnd(e)
-    }, { passive: false })
-
-    this.canvas.addEventListener('pointercancel', (e) => {
-      e.preventDefault()
-      this.handlePointerEnd(e)
-    }, { passive: false })
-
-    // 键盘事件监听
-    window.addEventListener('keydown', (e) => {
-      this.keys[e.code] = true
-      this.updateDirections()
-    })
-
-    window.addEventListener('keyup', (e) => {
-      this.keys[e.code] = false
-      this.updateDirections()
-    })
-  }
-
-  handlePointerStart(e) {
-    const rect = this.canvas.getBoundingClientRect()
-    const x = e.clientX - rect.left
-    const y = e.clientY - rect.top
-
-    this.touchStartX = x
-    this.touchStartY = y
-
-    // 只在左半边屏幕创建摇杆
-    if (x < this.canvas.width / 2 && !this.joystick.active) {
-      // 创建摇杆 - 在触摸位置生成
-      this.joystick.active = true
-      this.joystick.baseX = x
-      this.joystick.baseY = y
-      this.joystick.stickX = x
-      this.joystick.stickY = y
-      this.joystick.fingerId = e.pointerId
-
-      this.canvas.setPointerCapture(e.pointerId)
-    }
-  }
-
-  handlePointerMove(e) {
-    // 只处理已捕获的触摸点
-    if (e.pointerId !== this.joystick.fingerId) return
-
-    if (this.joystick.active) {
+      const touch = e.touches[0]
       const rect = this.canvas.getBoundingClientRect()
-      let x = e.clientX - rect.left
-      let y = e.clientY - rect.top
+      const x = touch.clientX - rect.left
+      const y = touch.clientY - rect.top
 
-      // 即使手指滑出Canvas也继续追踪
-      // 计算偏移量（相对于摇杆基点）
-      const dx = x - this.joystick.baseX
-      const dy = y - this.joystick.baseY
-      const distance = Math.sqrt(dx * dx + dy * dy)
-
-      // 限制最大偏移距离为60px
-      const maxDistance = 60
-      if (distance > maxDistance) {
-        // 归一化方向并限制距离
-        const normalizedDx = dx / distance
-        const normalizedDy = dy / distance
-        x = this.joystick.baseX + normalizedDx * maxDistance
-        y = this.joystick.baseY + normalizedDy * maxDistance
+      // 只在左半边屏幕创建摇杆
+      if (x < this.canvas.width / 2 && !this.joystick.active) {
+        this.joystick.active = true
+        this.joystick.baseX = x
+        this.joystick.baseY = y
+        this.joystick.stickX = x
+        this.joystick.stickY = y
+        this.joystick.fingerId = touch.identifier
       }
+    }, { passive: false })
 
-      this.joystick.stickX = x
-      this.joystick.stickY = y
-    }
-  }
+    this.canvas.addEventListener('touchmove', (e) => {
+      e.preventDefault()
 
-  handlePointerEnd(e) {
-    if (e.pointerId === this.joystick.fingerId) {
+      // 找到对应的触摸点
+      for (let i = 0; i < e.touches.length; i++) {
+        const touch = e.touches[i]
+        if (touch.identifier === this.joystick.fingerId && this.joystick.active) {
+          const rect = this.canvas.getBoundingClientRect()
+          let x = touch.clientX - rect.left
+          let y = touch.clientY - rect.top
+
+          // 计算偏移量
+          const dx = x - this.joystick.baseX
+          const dy = y - this.joystick.baseY
+          const distance = Math.sqrt(dx * dx + dy * dy)
+
+          // 限制最大偏移距离
+          const maxDistance = 60
+          if (distance > maxDistance) {
+            const normalizedDx = dx / distance
+            const normalizedDy = dy / distance
+            x = this.joystick.baseX + normalizedDx * maxDistance
+            y = this.joystick.baseY + normalizedDy * maxDistance
+          }
+
+          this.joystick.stickX = x
+          this.joystick.stickY = y
+        }
+      }
+    }, { passive: false })
+
+    this.canvas.addEventListener('touchend', (e) => {
+      e.preventDefault()
+
+      // 检查是否是我们追踪的手指
+      for (let i = 0; i < e.changedTouches.length; i++) {
+        if (e.changedTouches[i].identifier === this.joystick.fingerId) {
+          this.joystick.active = false
+          this.joystick.fingerId = null
+        }
+      }
+    }, { passive: false })
+
+    this.canvas.addEventListener('touchcancel', (e) => {
       this.joystick.active = false
       this.joystick.fingerId = null
-    }
+    }, { passive: false })
   }
 
   updateDirections() {
@@ -148,16 +120,15 @@ export class InputManager {
 
     // 动态摇杆输入
     if (this.joystick.active) {
-      const dx = this.joystick.stickX - this.joystick.baseX
-      const dy = this.joystick.stickY - this.joystick.baseY
-      const distance = Math.sqrt(dx * dx + dy * dy)
+      const jdx = this.joystick.stickX - this.joystick.baseX
+      const jdy = this.joystick.stickY - this.joystick.baseY
+      const distance = Math.sqrt(jdx * jdx + jdy * jdy)
 
       if (distance > 10) { // 死区
-        // 归一化并乘以距离比例（距离越大速度越快）
         const maxDistance = 60
         const factor = Math.min(distance, maxDistance) / maxDistance
-        dx = (dx / distance) * factor
-        dy = (dy / distance) * factor
+        dx = (jdx / distance) * factor
+        dy = (jdy / distance) * factor
       } else {
         return { x: 0, y: 0 }
       }
@@ -180,6 +151,11 @@ export class InputManager {
       stickX: this.joystick.stickX,
       stickY: this.joystick.stickY
     }
+  }
+
+  // 检查触摸是否在左半边（用于菜单开始游戏）
+  isTouchInLeftHalf(x, y) {
+    return x < this.canvas.width / 2
   }
 
   isKeyPressed(code) {

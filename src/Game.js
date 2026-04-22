@@ -43,6 +43,14 @@ export class Game {
 
     this.setupMenuInput()
     this.gameLoop = this.gameLoop.bind(this)
+
+    // 额外添加 document 级别的触摸事件，确保手机能响应
+    document.addEventListener('touchstart', (e) => {
+      if (this.state === GAME_STATE.MENU || this.state === GAME_STATE.GAME_OVER) {
+        e.preventDefault()
+        this.startGame()
+      }
+    }, { passive: false })
   }
 
   triggerScreenShake(intensity = 5, duration = 100) {
